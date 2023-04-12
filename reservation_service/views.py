@@ -2,12 +2,18 @@ from django.shortcuts import render
 from rest_framework.decorators import api_view
 from .models import Seat, Showtime
 from rest_framework.response import Response
+from rest_framework import status
+from django.core.exceptions import ObjectDoesNotExist
 
 @api_view(['GET', 'POST'])
 def get_seat(request, movie):
     if request.method == 'GET':
-        showtime_object = Showtime.objects.get(movie_id=movie)   
-        print(showtime_object.id)
+        try:
+            showtime_object = Showtime.objects.get(movie_id=movie)  
+        except ObjectDoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND) 
+
+        showtime_object = Showtime.objects.get(movie_id=movie)  
         seat_object = Seat.objects.filter(showtime_id = showtime_object)
         if not seat_object:
             for i in range(10):
