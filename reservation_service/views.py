@@ -30,7 +30,12 @@ def get_seat(request, movie):
     elif request.method == 'POST':
         data = request.data
         for i in data["seat_id"]:
-            showtime_object = Showtime.objects.get(movie_id=movie)   
+            try:
+                showtime_object = Showtime.objects.get(movie_id=movie, pk=data["showtime_id"])  
+            except ObjectDoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND) 
+                
+            showtime_object = Showtime.objects.get(movie_id=movie, pk=data["showtime_id"])      
             seat_object = Seat.objects.get(  showtime_id = showtime_object, 
                                             seat_id = i)
             if seat_object.is_available == False:
