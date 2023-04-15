@@ -31,7 +31,7 @@ def get_seat(request, movie_id, showtime_id):
     elif request.method == 'POST':
         data = request.data
         for i in data["seat_id"]:
-            showtime_object = Showtime.objects.get(movie_id=movie_id)
+            showtime_object = Showtime.objects.get(id=showtime_id, movie_id=movie_id)
             seat_object = Seat.objects.get(  showtime_id = showtime_object, 
                                             seat_id = i)
             if seat_object.is_available == False:
@@ -39,7 +39,7 @@ def get_seat(request, movie_id, showtime_id):
         
         array_seat = []
         for i in data["seat_id"]:
-            showtime_object = Showtime.objects.get(movie_id=movie_id)
+            showtime_object = Showtime.objects.get(id=showtime_id, movie_id=movie_id)
             seat_object = Seat.objects.filter(  showtime_id = showtime_object, 
                                             seat_id = i).update(is_available = False)
             response = {"seat_ticket": i,
