@@ -4,6 +4,7 @@ from .models import Seat, Showtime
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils import dateformat, dateparse
 
 @api_view(['GET', 'POST'])
 def get_seat(request, movie_id, showtime_id):
@@ -65,25 +66,15 @@ def get_all_showtimes(request, movie_id):
 
 @api_view(['POST'])
 def initialize_reservation(request, movie_id):
-    """
-    Currently, this endpoint is a temporary solution that might be permanent.
-    As we have time constraint, we are going to struggle to complete the project.
-
-    Ideally, this should be created after the movie service created a movie and then reserve some seats.
-    Also, this should be done without waiting.
-
-    I am ready to hear another solution.
-
-    - Pontakorn Paesaeng
-    """
     if Showtime.objects.filter(movie_id=movie_id).exists():
         return Response({
             "message": "Movie already exists.",
             "code": "movie_exists"
         }, status=400) # Bad Request
-    showtime_object = Showtime.objects.create(movie_id=movie_id)
+    start_time = dateparse.parse_datetime(request.data['showtime'])
+    showtime_object = Showtime.objects.create(movie_id=movie_id, showtime=start_time)
     # TODO: Validate request (amount must be a positive number)
-    amount = request.data['amount_of_seat']
+    amount = request.data['amount']
     for i in range(amount):
-        Seat.objects.create(seat_id=i+1, showtime=showtime_object)
+        Seat.objects.create(seat_id=i+1, showtime_id=showtime_object)
     return Response(status=204)
