@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import dateformat, dateparse
+from .serializers import ReservationInitSerializer
 
 @api_view(['GET', 'POST'])
 def get_seat(request, movie_id, showtime_id):
@@ -71,10 +72,10 @@ def initialize_reservation(request, movie_id):
             "message": "Movie already exists.",
             "code": "movie_exists"
         }, status=400) # Bad Request
-    start_time = dateparse.parse_datetime(request.data['showtime'])
-    showtime_object = Showtime.objects.create(movie_id=movie_id, showtime=start_time)
-    # TODO: Validate request (amount must be a positive number)
-    amount = request.data['amount']
-    for i in range(amount):
-        Seat.objects.create(seat_id=i+1, showtime_id=showtime_object)
-    return Response(status=204)
+    reserve_init = ReservationInitSerializer(data=request.data)
+    if reserve_init.is_valid():
+        showtime_object = Showtime.objects.create(movie_id=movie_id, showtime=reserve_init.data['showtime'])
+        for i in range(reserve_init.data['amount']):
+            Seat.objects.create(seat_id=i+1, showtime_id=showtime_object)
+        return Response(status=204)
+    return Response(reserve_init.errors, 400)
