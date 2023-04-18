@@ -61,3 +61,29 @@ def get_all_showtimes(request, movie_id):
             'start_time': showtime.showtime
         })
     return Response(showtimes_list)
+
+
+@api_view(['POST'])
+def initialize_reservation(request, movie_id):
+    """
+    Currently, this endpoint is a temporary solution that might be permanent.
+    As we have time constraint, we are going to struggle to complete the project.
+
+    Ideally, this should be created after the movie service created a movie and then reserve some seats.
+    Also, this should be done without waiting.
+
+    I am ready to hear another solution.
+
+    - Pontakorn Paesaeng
+    """
+    if Showtime.objects.filter(movie_id=movie_id).exists():
+        return Response({
+            "message": "Movie already exists.",
+            "code": "movie_exists"
+        }, status=400) # Bad Request
+    showtime_object = Showtime.objects.create(movie_id=movie_id)
+    # TODO: Validate request (amount must be a positive number)
+    amount = request.data['amount_of_seat']
+    for i in range(amount):
+        Seat.objects.create(seat_id=i+1, showtime=showtime_object)
+    return Response(status=204)
