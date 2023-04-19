@@ -44,7 +44,7 @@ def get_seat(request, movie_id, showtime_id):
                 return Response("Fail to reserve")
 
         # GET moviel detail, title and cinema
-        movie_detail = requests.get(f"{MOVIE_PATH}movies_service/movie/{movie_id}").json()
+        movie_detail = requests.get(f"{MOVIE_PATH}movies_service/movies/{movie_id}").json()
 
         array_seat = []
         for i in data["seat_id"]:
