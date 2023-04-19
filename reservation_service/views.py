@@ -7,9 +7,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from decouple import config
 import requests
 import json
-from datetime import datetime
 
-MOVIE_PARTH = config("MOVIE_PARTH")
+MOVIE_PATH = config("MOVIE_PATH")
 TICKET_PATH = config("TICKET_PATH")
 
 @api_view(['GET', 'POST'])
@@ -45,7 +44,7 @@ def get_seat(request, movie_id, showtime_id):
                 return Response("Fail to reserve")
 
         # GET moviel detail, title and cinema
-        movie_detail = requests.get(f"{MOVIE_PARTH}movies_service/movie/{movie_id}/detail").json()
+        movie_detail = requests.get(f"{MOVIE_PATH}movies_service/movie/{movie_id}").json()
 
         array_seat = []
         for i in data["seat_id"]:
