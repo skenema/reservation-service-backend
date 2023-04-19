@@ -4,6 +4,13 @@ from .models import Seat, Showtime
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist
+from decouple import config
+import requests
+import json
+from datetime import datetime
+
+MOVIE_PARTH = config("MOVIE_PARTH")
+TICKET_PATH = config("TICKET_PATH")
 
 @api_view(['GET', 'POST'])
 def get_seat(request, movie_id, showtime_id):
@@ -36,7 +43,10 @@ def get_seat(request, movie_id, showtime_id):
                                             seat_id = i)
             if seat_object.is_available == False:
                 return Response("Fail to reserve")
-        
+
+        # GET moviel detail, title and cinema
+        movie_detail = requests.get(f"{MOVIE_PARTH}movies_service/movie/{movie_id}/detail").json()
+
         array_seat = []
         for i in data["seat_id"]:
             showtime_object = Showtime.objects.get(id=showtime_id, movie_id=movie_id)
@@ -45,8 +55,18 @@ def get_seat(request, movie_id, showtime_id):
             response = {"seat_ticket": i,
                         "showtime": showtime_object.showtime }
             array_seat.append(response)
-        
-        return Response(array_seat)
+
+        # POST to create ticket
+        data = {"title" : movie_detail["title"],
+                "seat_number" : data["seat_id"], 
+                "cinema" : movie_detail["cinema"], 
+                "showtime" : str(showtime_object.showtime)}
+        headers = {'Content-type': 'application/json'}
+        ticket_list = requests.post(    f"{TICKET_PATH}ticket_service/create-ticket", 
+                                        data=json.dumps(data),
+                                        headers=headers
+                                                                                    )  
+        return Response(ticket_list.json())
 
 
 @api_view(['GET'])
