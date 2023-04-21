@@ -8,8 +8,8 @@ from decouple import config
 import requests
 import json
 
-MOVIE_PATH = config("MOVIE_PATH")
-TICKET_PATH = config("TICKET_PATH")
+MOVIE_PATH = config("MOVIE_PATH", default="http://localhost:8080/")
+TICKET_PATH = config("TICKET_PATH", default="http://localhost:8090/")
 
 @api_view(['GET', 'POST'])
 def get_seat(request, movie_id, showtime_id):

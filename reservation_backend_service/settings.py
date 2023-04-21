@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config, Csv
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-wwiot3^7am3!k9&d0k6s%j1$_@&dt(5-^!g52x86%_q&l1&3e0'
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-wwiot3^7am3!k9&d0k6s%j1$_@&dt(5-^!g52x86%_q&l1&3e0')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -75,13 +77,24 @@ WSGI_APPLICATION = 'reservation_backend_service.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
-
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': config('DATABASE_NAME', default="auth_db"),
+            'USER': config('DATABASE_USERNAME', default='auth_user'),
+            'PASSWORD': config('DATABASE_PASSWORD', default='auth_password'),
+            'HOST': config('DATABASE_HOST', default='127.0.0.1'),
+            'PORT': config('DATABASE_PORT', default=3306, cast=int)
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -123,3 +136,22 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SIMPLE_JWT = {
+    # For god sake, this token suppose to be short-lived.
+    # However, I am more concerned about deploying applications
+    # because we literally have less than a week to deploy the full thing.
+    # If you are from the security class, please forgive me.
+
+    # Also, in case that you fork this, please change it to something more secure.
+    # - Pontakorn Paesaeng
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'SIGNING_KEY': config('SIGNING_KEY')
+}
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTStatelessUserAuthentication'
+    )
+}
