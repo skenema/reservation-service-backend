@@ -8,6 +8,8 @@ from decouple import config
 import requests
 import json
 
+from .serializers import ReservationCreation
+
 MOVIE_PATH = config("MOVIE_PATH", default="http://localhost:8080/")
 TICKET_PATH = config("TICKET_PATH", default="http://localhost:8090/")
 
@@ -80,3 +82,15 @@ def get_all_showtimes(request, movie_id):
             'start_time': showtime.showtime
         })
     return Response(showtimes_list)
+
+@api_view(['POST'])
+def create_showtime(request, movie_id):
+    # There is no consistency check due to time limit
+    creation = ReservationCreation(data=request.data)
+    if creation.is_valid():
+        validated_data = creation.validated_data
+        showtime = Showtime.objects.create(movie_id=movie_id, showtime=validated_data.get('start_time'))
+        for i in range(validated_data.get('amount_of_seats')):
+            Seat.objects.create(showtime_id=showtime, seat_id=i + 1, is_available=True)
+        return Response({}, status=204)
+    return Response(creation.errors, status=400)
