@@ -1,5 +1,7 @@
 from django.shortcuts import render
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+
 from .models import Seat, Showtime
 from rest_framework.response import Response
 from rest_framework import status
@@ -84,6 +86,7 @@ def get_all_showtimes(request, movie_id):
     return Response(showtimes_list)
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_showtime(request, movie_id):
     # There is no consistency check due to time limit
     creation = ReservationCreation(data=request.data)
