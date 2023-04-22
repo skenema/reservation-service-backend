@@ -1,5 +1,7 @@
 from django.shortcuts import render
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+
 from .models import Seat, Showtime
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,6 +9,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from decouple import config
 import requests
 import json
+
+from .serializers import ReservationCreation
 
 MOVIE_PATH = config("MOVIE_PATH", default="http://localhost:8080/")
 TICKET_PATH = config("TICKET_PATH", default="http://localhost:8090/")
@@ -71,7 +75,8 @@ def get_seat(request, movie_id, showtime_id):
 @api_view(['GET'])
 def get_all_showtimes(request, movie_id):
     if not Showtime.objects.filter(movie_id=movie_id).exists():
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        # Easier this way
+        return Response([])
     showtimes = Showtime.objects.filter(movie_id=movie_id).order_by('showtime')
     showtimes_list = []
     for showtime in showtimes:
@@ -80,3 +85,16 @@ def get_all_showtimes(request, movie_id):
             'start_time': showtime.showtime
         })
     return Response(showtimes_list)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_showtime(request, movie_id):
+    # There is no consistency check due to time limit
+    creation = ReservationCreation(data=request.data)
+    if creation.is_valid():
+        validated_data = creation.validated_data
+        showtime = Showtime.objects.create(movie_id=movie_id, showtime=validated_data.get('start_time'))
+        for i in range(validated_data.get('amount_of_seats')):
+            Seat.objects.create(showtime_id=showtime, seat_id=i + 1, is_available=True)
+        return Response({}, status=204)
+    return Response(creation.errors, status=400)
