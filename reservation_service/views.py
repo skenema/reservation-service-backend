@@ -75,7 +75,8 @@ def get_seat(request, movie_id, showtime_id):
 @api_view(['GET'])
 def get_all_showtimes(request, movie_id):
     if not Showtime.objects.filter(movie_id=movie_id).exists():
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        # Easier this way
+        return Response([])
     showtimes = Showtime.objects.filter(movie_id=movie_id).order_by('showtime')
     showtimes_list = []
     for showtime in showtimes:
